@@ -8,7 +8,7 @@ services:
       - redis
       - auth_postgres
     ports:
-      - "8002"
+      - "8002:8002"
     env_file:
       - .env
     networks:
@@ -17,9 +17,9 @@ services:
   auth_nginx:
     image: nginx:latest
     container_name: auth_nginx
-#    volumes:
-#      - ./src/nginx.conf:/etc/nginx/nginx.conf:ro
-#      - ./src/nginx_config:/etc/nginx/conf.d:ro
+    volumes:
+      - ./src/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./src/nginx_config:/etc/nginx/conf.d:ro
     depends_on:
       - auth_service
     ports:
@@ -31,14 +31,15 @@ services:
     image: postgres:15
     container_name: auth_postgres
 #    volumes:
-#      - ./.data/postgres:/data/postgres
-#      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql:ro
+#       - ./.data/postgres:/data/postgres
+#       - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql:ro
     environment:
       POSTGRES_DB: ${DB_NAME:-auth_database}
       POSTGRES_USER: ${DB_USER:-app}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    command: -p 5434
     ports:
-      - "5434"
+      - "5434:5434"
     networks:
       - my_network
 
@@ -46,9 +47,19 @@ services:
     image: redis:latest
     container_name: redis
     ports:
-      - "6379"
+      - "6379:6379"
     networks:
       - my_network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+    networks:
+      - my_network
+
 
 networks:
   my_network:
